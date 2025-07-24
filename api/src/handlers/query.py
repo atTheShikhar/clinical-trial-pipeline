@@ -22,7 +22,7 @@ def configure_duckdb():
         );
         CREATE SECRET (
             TYPE mysql,
-            HOST '{sm.mysql_db}',
+            HOST '{sm.mysql_host}',
             PORT 3306,
             DATABASE '{sm.mysql_db}',
             USER '{sm.mysql_user}',
