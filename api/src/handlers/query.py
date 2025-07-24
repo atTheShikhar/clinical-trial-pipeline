@@ -8,7 +8,7 @@ from src.settings import sm
 logger = logging.getLogger(__name__)
 
 
-def configure_duckdb():
+def connect_db():
     duckdb.sql(
         f"""
         INSTALL httpfs;
@@ -31,6 +31,12 @@ def configure_duckdb():
         ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials', METADATA_SCHEMA '{sm.mysql_db}');
         USE my_ducklake;
         """
+    )
+
+
+def disconnect_db():
+    duckdb.sql(
+        "DETACH"
     )
 
 

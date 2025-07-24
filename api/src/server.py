@@ -8,15 +8,16 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from src.handlers.query import configure_duckdb
+from src.handlers.query import connect_db, disconnect_db
 from src.routes.query import queryRouter
 from src.settings import sm
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    configure_duckdb()
+    connect_db()
     yield
+    disconnect_db()
 
 
 app = FastAPI(lifespan=lifespan, docs_url="/active-docs/")
