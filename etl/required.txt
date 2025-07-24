@@ -1,0 +1,1 @@
+NCTId, BriefTitle, Condition, InterventionName, OverallStatus, StartDate, PrimaryCompletionDate

@@ -1,0 +1,2 @@
+
+sqlmesh init duckdb
