@@ -1,0 +1,1 @@
+SELECT nct_id, brief_title FROM ducklake WHERE 'ferrous fumarate' = ANY(intervention_names)

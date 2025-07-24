@@ -1,0 +1,4 @@
+*.env
+.venv
+service_account*
+__pycache__
