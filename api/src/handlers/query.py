@@ -36,7 +36,7 @@ def connect_db():
 
 def disconnect_db():
     duckdb.sql(
-        "DETACH"
+        "DETACH DATABASE my_ducklake"
     )
 
 
