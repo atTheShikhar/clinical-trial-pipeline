@@ -28,7 +28,7 @@ def configure_duckdb():
             USER '{sm.mysql_user}',
             PASSWORD '{sm.mysql_pass}'
         );
-        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials');
+        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials', METADATA_SCHEMA '{sm.mysql_db}');
         USE my_ducklake;
         """
     )
