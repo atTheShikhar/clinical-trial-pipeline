@@ -1,6 +1,4 @@
-FROM ghcr.io/astral-sh/uv:python3.10-alpine
-
-RUN apk add --no-cache curl build-base
+FROM ghcr.io/astral-sh/uv:debian
 
 WORKDIR /app
 

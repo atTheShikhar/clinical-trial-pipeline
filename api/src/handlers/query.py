@@ -8,30 +8,21 @@ from src.settings import sm
 logger = logging.getLogger(__name__)
 
 
-
-def configure_ducklake():
-    duckdb.sql("INSTALL ducklake;")
-    duckdb.sql(f"ATTACH 'ducklake:metadata.ducklake' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials');")
-    duckdb.sql("USE my_ducklake;")
-
-
-def configure_cloud_storage():
-    duckdb.sql("INSTALL httpfs;")
-    duckdb.sql("LOAD httpfs;")
+def configure_duckdb():
     duckdb.sql(
         f"""
-            CREATE SECRET (
-                TYPE gcs,
-                KEY_ID '{sm.storage_access_id}',
-                SECRET '{sm.storage_secret}'
-            );
+        INSTALL httpfs;
+        LOAD httpfs;
+        CREATE SECRET (
+            TYPE gcs,
+            KEY_ID '{sm.storage_access_id}',
+            SECRET '{sm.storage_secret}'
+        );
+        INSTALL ducklake;
+        ATTACH 'ducklake:metadata.ducklake' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials');
+        USE my_ducklake;
         """
     )
-
-
-def configure_duckdb():
-    configure_cloud_storage()
-    configure_ducklake()
 
 
 def run_query(qry: str):
