@@ -12,14 +12,23 @@ def configure_duckdb():
     duckdb.sql(
         f"""
         INSTALL httpfs;
+        INSTALL ducklake;
+        INSTALL mysql;
         LOAD httpfs;
         CREATE SECRET (
             TYPE gcs,
             KEY_ID '{sm.storage_access_id}',
             SECRET '{sm.storage_secret}'
         );
-        INSTALL ducklake;
-        ATTACH 'ducklake:metadata.ducklake' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials');
+        CREATE SECRET (
+            TYPE mysql,
+            HOST '{sm.mysql_db}',
+            PORT 3306,
+            DATABASE '{sm.mysql_db}',
+            USER '{sm.mysql_user}',
+            PASSWORD '{sm.mysql_pass}'
+        );
+        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials');
         USE my_ducklake;
         """
     )

@@ -16,10 +16,10 @@ class SettingsManager(BaseSettings):
     for easy accesss in a typed format.\n
     NOTE: exported variable names are given preference over `.env` file.
     """
-    # sql_uname: str
-    # sql_pass: str
-    # sql_host: str
-    # sql_db: str
+    mysql_user: str
+    mysql_pass: str
+    mysql_host: str
+    mysql_db: str
     # jwt_secret: str
     # storage_bucket: str
     storage_bucket: str
