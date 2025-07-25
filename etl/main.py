@@ -1,5 +1,6 @@
 import duckdb
 from dotenv import dotenv_values
+from sqlmesh.core.config.connection import DuckDBAttachOptions
 
 secrets = dotenv_values(".env")
 
@@ -12,12 +13,12 @@ def configure_ducklake(flavour="duckdb"):
         CREATE SECRET (
             TYPE mysql,
             HOST '{secrets["MYSQL_HOST"]}',
-            PORT 3306,
-            DATABASE '{secrets["MYSQL_DB"]}',
+            PORT '{secrets["MYSQL_TCP_PORT"]}',
+            DATABASE '{secrets["MYSQL_DATABASE"]}',
             USER '{secrets["MYSQL_USER"]}',
-            PASSWORD '{secrets["MYSQL_PASS"]}'
+            PASSWORD '{secrets["MYSQL_PWD"]}'
         );
-        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH 'gs://shikhar-clinical-trials-ducklake/trials');
+        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{secrets["DUCKLAKE_GCS_BUCKET"]}', METADATA_SCHEMA '{secrets["MYSQL_DATABASE"]}');
     """)
     duckdb.sql("USE my_ducklake;")
     print("ducklake configured")
@@ -40,12 +41,10 @@ def configure_cloud_storage(flavour="gcloud"):
     )
     print("storage configured")
 
-# TODO: write partitioned data
 
 def write_data():
-    # duckdb.read_json()
     duckdb.sql(
-        """
+        f"""
         COPY(
             SELECT
                 protocolSection.identificationModule.nctId AS nct_id,
@@ -53,27 +52,19 @@ def write_data():
                 protocolSection.conditionsModule.conditions AS condition,
                 LIST_TRANSFORM(protocolSection.armsInterventionsModule.interventions, x -> x.name) AS intervention_names,
                 protocolSection.statusModule.overallStatus AS overall_status,
-                CASE
-                    WHEN protocolSection.statusModule.startDateStruct.date ~ '^\d{4}-\d{2}-\d{2}$' THEN CAST(protocolSection.statusModule.startDateStruct.date AS DATE)
-                    WHEN protocolSection.statusModule.startDateStruct.date ~ '^\d{4}-\d{2}$' THEN CAST(protocolSection.statusModule.startDateStruct.date || '-01' AS DATE)
-                    WHEN protocolSection.statusModule.startDateStruct.date ~ '^\d{4}$' THEN CAST(protocolSection.statusModule.startDateStruct.date || '-01-01' AS DATE)
-                    ELSE NULL
-                END AS start_date,
-                CASE
-                    WHEN protocolSection.statusModule.primaryCompletionDateStruct.date ~ '^\d{4}-\d{2}-\d{2}$' THEN CAST(protocolSection.statusModule.primaryCompletionDateStruct.date AS DATE)
-                    WHEN protocolSection.statusModule.primaryCompletionDateStruct.date ~ '^\d{4}-\d{2}$' THEN CAST(protocolSection.statusModule.primaryCompletionDateStruct.date || '-01' AS DATE)
-                    WHEN protocolSection.statusModule.primaryCompletionDateStruct.date ~ '^\d{4}$' THEN CAST(protocolSection.statusModule.primaryCompletionDateStruct.date || '-01-01' AS DATE)
-                    ELSE NULL
-                END AS primary_completion_date,
+                DATE(try_strptime(protocolSection.statusModule.startDateStruct.date, '%Y-%m-%d')) AS start_date,
+                DATE(try_strptime(protocolSection.statusModule.primaryCompletionDateStruct.date, '%Y-%m-%d')) AS primary_completion_date,
                 YEAR(start_date) AS start_year,
                 MONTH(start_date) AS start_month
             FROM 
-                read_json(
-                    'gs://shikhar-clinical-trials-raw/*.json', 
+                read_ndjson(
+                    '{secrets["RAW_GCS_BUCKET"]}*.json', 
                     ignore_errors=true, 
                     auto_detect=true
                 )
-        ) TO 'gs://shikhar-clinical-trials-ducklake/trials'
+            WHERE
+                start_date IS NOT NULL
+        ) TO '{secrets["DUCKLAKE_GCS_BUCKET"]}'
         (FORMAT parquet, COMPRESSION zstd, PARTITION_BY (start_year, start_month), OVERWRITE_OR_IGNORE)
         """
     )
@@ -82,8 +73,8 @@ def write_data():
 
 def read_data():
     duckdb.sql(
-        """
-        SELECT * FROM read_parquet('gs://shikhar-clinical-trials-ducklake/trials/*/*/*.parquet', hive_partitioning=false);
+        f"""
+        SELECT * FROM read_parquet('{secrets["DUCKLAKE_GCS_BUCKET"]}*/*/*.parquet', hive_partitioning=false);
         """
     ).show()
 
@@ -91,15 +82,16 @@ def read_data():
 
 def main():
     configure_cloud_storage()
-    configure_ducklake()
-    write_data()
+    # configure_ducklake()
+    # write_data()
     read_data()
-    # duckdb.read_json_objects("dummy/*.json")   
-    # con = duckdb.connect("db.db")
-    # con.sql("SELECT * FROM sqlmesh_example__dev.seed_model").show()
-    # print(df)
-    # print("Hello from etl!")
-    # duckdb.sql("SELECT * FROM read_parquet('trials.parquet')").show()
+    # duckdb.sql(
+    #     """
+    #         SELECT 
+    #             DATE(NULL)
+    #     """
+    # ).show()
+
 
 
 if __name__ == "__main__":
