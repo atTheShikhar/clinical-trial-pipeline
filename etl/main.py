@@ -1,8 +1,10 @@
 import duckdb
 from dotenv import dotenv_values
 from sqlmesh.core.config.connection import DuckDBAttachOptions
+from sqlmesh import model
 
 secrets = dotenv_values(".env")
+
 
 def configure_ducklake(flavour="duckdb"):
     print("configuring ducklake...")

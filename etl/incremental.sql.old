@@ -18,10 +18,10 @@ SELECT
     YEAR(start_date) AS start_year,
     MONTH(start_date) AS start_month
 FROM 
-    read_json(
-        CONCAT(@RAW_GCS_BUCKET, '*.json'),
-        ignore_errors=true, 
-        auto_detect=true
+    read_ndjson(
+      CONCAT(@RAW_GCS_BUCKET, '*.json'),
+      ignore_errors=true, 
+      auto_detect=true
     )
 WHERE 
     start_date IS NOT NULL
