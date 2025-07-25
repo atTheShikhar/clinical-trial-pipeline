@@ -29,6 +29,7 @@ def connect_db():
             PASSWORD '{sm.mysql_pass}'
         );
         ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials', METADATA_SCHEMA '{sm.mysql_db}');
+        ATTACH ':memory:' AS memory_db;
         USE my_ducklake;
         """
     )
@@ -36,7 +37,10 @@ def connect_db():
 
 def disconnect_db():
     duckdb.sql(
-        "DETACH DATABASE my_ducklake"
+        """
+        USE memory_db;
+        DETACH DATABASE IF EXISTS my_ducklake;
+        """
     )
 
 
