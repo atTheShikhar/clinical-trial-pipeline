@@ -8,48 +8,17 @@ from src.settings import sm
 logger = logging.getLogger(__name__)
 
 
-def connect_db():
-    duckdb.sql(
-        f"""
-        INSTALL httpfs;
-        INSTALL ducklake;
-        INSTALL mysql;
-        LOAD httpfs;
-        CREATE SECRET (
-            TYPE gcs,
-            KEY_ID '{sm.storage_access_id}',
-            SECRET '{sm.storage_secret}'
-        );
-        CREATE SECRET (
-            TYPE mysql,
-            HOST '{sm.mysql_host}',
-            PORT 3306,
-            DATABASE '{sm.mysql_db}',
-            USER '{sm.mysql_user}',
-            PASSWORD '{sm.mysql_pass}'
-        );
-        ATTACH 'ducklake:mysql:' AS my_ducklake (DATA_PATH '{sm.storage_bucket}/trials', METADATA_SCHEMA '{sm.mysql_db}');
-        ATTACH ':memory:' AS memory_db;
-        USE my_ducklake;
-        """
-    )
-
-
-def disconnect_db():
-    duckdb.sql(
-        """
-        USE memory_db;
-        DETACH DATABASE IF EXISTS my_ducklake;
-        """
-    )
-
-
-def run_query(qry: str):
+def run_query(conn: duckdb.DuckDBPyConnection ,qry: str):
+    if sm.is_prod():
+        db = f"read_parquet('{sm.storage_bucket}/trials/*/*/*.parquet')" 
+        qry = qry.replace("ducklake", db)
     try:
-        qry = qry.replace("ducklake", f"read_parquet('{sm.storage_bucket}/trials/*/*/*.parquet', hive_partitioning=true)" )
-        df = duckdb.sql(qry).df()
-        json_str = df.to_json()
-        return json.loads(json_str)
+        conn.execute(f"EXPLAIN {qry}")
     except Exception as e:
         logger.error(e)
-        raise HTTPException(status_code=500, detail="Something went wrong!")
+        raise HTTPException(400, "Invalid SQL query provided!")
+
+    df = conn.sql(qry).df()
+    json_str = df.to_json()
+    # print(json_str)
+    return json.loads(json_str)

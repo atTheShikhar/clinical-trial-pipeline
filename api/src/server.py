@@ -1,5 +1,3 @@
-import csv
-import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
@@ -8,14 +6,16 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from src.handlers.query import connect_db, disconnect_db
+from src.db import connect_db, disconnect_db
 from src.routes.query import queryRouter
 from src.settings import sm
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    connect_db()
+    conn = connect_db()
+    app.state.db_conn = conn
     yield
     disconnect_db()
 
@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan, docs_url="/active-docs/")
 
 app.add_middleware(
-    CORSMiddleware, 
+    CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],

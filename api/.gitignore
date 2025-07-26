@@ -2,3 +2,4 @@
 .venv
 service_account*
 __pycache__
+local.duckdb
