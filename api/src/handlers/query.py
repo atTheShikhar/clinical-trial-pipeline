@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def run_query(conn: duckdb.DuckDBPyConnection ,qry: str):
     if sm.is_prod():
-        db = f"read_parquet('{sm.storage_bucket}/trials/*/*/*.parquet')" 
+        db = f"read_parquet('{sm.storage_bucket}/*/*/*.parquet')" 
         qry = qry.replace("ducklake", db)
     try:
         conn.execute(f"EXPLAIN {qry}")
