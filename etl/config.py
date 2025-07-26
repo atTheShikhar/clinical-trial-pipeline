@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from sqlmesh.core.config import (
     Config,
     ModelDefaultsConfig,
@@ -8,11 +9,14 @@ from sqlmesh.core.config import (
 from sqlmesh.core.config.connection import DuckDBAttachOptions
 
 
+load_dotenv()
+
 variables = {
     "raw_gcs_bucket": os.environ["RAW_GCS_BUCKET"]
 }
 
 
+#NOTE: Extended the library specific class to add support for previously unsupported uptions
 class CustomDuckDBAttachOptions(DuckDBAttachOptions):
     metadata_schema: str | None # NOTE: MySQL specific custom option
 
@@ -42,13 +46,13 @@ class CustomDuckDBAttachOptions(DuckDBAttachOptions):
 
         options_sql = f" ({', '.join(options)})" if options else ""
         alias_sql = ""
-        # TODO: Add support for Postgres schema. Currently adding it blocks access to the information_schema
 
         # MotherDuck does not support aliasing
         alias_sql = (
             f" AS {alias}" if not (self.type == "motherduck" or self.path.startswith("md:")) else ""
         )
-        return f"ATTACH IF NOT EXISTS '{path}'{alias_sql}{options_sql}"
+        attach_qry = f"ATTACH IF NOT EXISTS '{path}'{alias_sql}{options_sql}"
+        return attach_qry
 
 
 config = Config(
@@ -79,15 +83,17 @@ config = Config(
                         type="ducklake",
                         path="mysql:",
                         data_path=os.environ["DUCKLAKE_GCS_BUCKET"],
-                        # encrypted=False,
-                        # data_inlining_row_limit=10,
                         metadata_schema=os.environ["MYSQL_DATABASE"]
-                    ),
+                    )
                 }
             ),
             state_connection=DuckDBConnectionConfig(
                 type="duckdb",
                 database="state.db"
+            ),
+            test_connection=DuckDBConnectionConfig(
+                type="duckdb",
+                database="test.db"
             )
         ),
     },

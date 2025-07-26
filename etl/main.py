@@ -60,7 +60,11 @@ def write_data():
                 MONTH(start_date) AS start_month
             FROM 
                 read_ndjson(
-                    '{secrets["RAW_GCS_BUCKET"]}*.json', 
+                    [
+                        '{secrets["RAW_GCS_BUCKET"]}NCT00000579.json',
+                        '{secrets["RAW_GCS_BUCKET"]}NCT00000679.json',
+                        '{secrets["RAW_GCS_BUCKET"]}NCT00676884.json',
+                    ],
                     ignore_errors=true, 
                     auto_detect=true
                 )
@@ -88,13 +92,56 @@ def main():
     # write_data()
     read_data()
     # duckdb.sql(
-    #     """
+    #     f"""
     #         SELECT 
-    #             DATE(NULL)
+    #             nct_id,
+    #             brief_title,
+    #             conditions,
+    #             intervention_names,
+    #             overall_status,
+    #             CASE 
+    #                 WHEN try_strptime(start_date, '%Y-%m-%d') IS NOT NULL 
+    #                     THEN DATE(strptime(start_date, '%Y-%m-%d'))
+    #                 WHEN try_strptime(start_date, '%Y-%m') IS NOT NULL 
+    #                     THEN DATE(strptime(start_date || '-01', '%Y-%m-%d'))
+    #                 ELSE 
+    #                     NULL
+    #             END AS start_date,
+    #             CASE 
+    #                 WHEN try_strptime(completion_date, '%Y-%m-%d') IS NOT NULL 
+    #                     THEN DATE(strptime(completion_date, '%Y-%m-%d'))
+    #                 WHEN try_strptime(completion_date, '%Y-%m') IS NOT NULL 
+    #                     THEN DATE(strptime(completion_date || '-01', '%Y-%m-%d'))
+    #                 ELSE 
+    #                     NULL
+    #             END AS completion_date
+    #         FROM (
+    #             SELECT
+    #                 protocolSection.identificationModule.nctId AS nct_id,
+    #                 protocolSection.identificationModule.briefTitle AS brief_title,
+    #                 protocolSection.conditionsModule.conditions AS conditions,
+    #                 LIST_TRANSFORM(protocolSection.armsInterventionsModule.interventions, x -> x.name) AS intervention_names,
+    #                 protocolSection.statusModule.overallStatus AS overall_status,
+    #                 protocolSection.statusModule.startDateStruct.date AS start_date,
+    #                 protocolSection.statusModule.primaryCompletionDateStruct.date AS completion_date,
+    #             FROM 
+    #                 read_ndjson(
+    #                     "./dummy/*.json",
+    #                     ignore_errors=true, 
+    #                     auto_detect=true
+    #                 )
+    #             WHERE 
+    #                 start_date IS NOT NULL
+    #         ) AS raw_data;
     #     """
     # ).show()
 
 
+                        # [
+                        #     '{secrets["RAW_GCS_BUCKET"]}NCT00000579.json',
+                        #     '{secrets["RAW_GCS_BUCKET"]}NCT00000679.json',
+                        #     '{secrets["RAW_GCS_BUCKET"]}NCT00676884.json',
+                        # ],
 
 if __name__ == "__main__":
     main()
