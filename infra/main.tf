@@ -1,6 +1,8 @@
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  credentials = file(var.gcp_credentials_file)
+  project     = var.project_id
+  region      = var.region
+  zone        = var.zone
 }
 
 resource "google_storage_bucket" "raw_bucket" {
@@ -65,46 +67,46 @@ resource "google_storage_bucket_iam_member" "ro_sa_ducklake" {
   member = "serviceAccount:${google_service_account.bucket_ro_sa.email}"
 }
 
-resource "google_compute_instance" "vm_instance" {
-  name         = "shikhar-vm"
-  machine_type = "e2-standard-2"  # 2 vCPU, 4 GB RAM
-  zone         = var.zone
+# resource "google_compute_instance" "vm_instance" {
+#   name         = "shikhar-vm"
+#   machine_type = "e2-standard-2" # 2 vCPU, 4 GB RAM
+#   zone         = var.zone
 
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-12"
-      size  = 20  # in GB
-      type  = "pd-balanced"
-    }
+#   boot_disk {
+#     initialize_params {
+#       image = "debian-cloud/debian-12"
+#       size  = 20 # in GB
+#       type  = "pd-balanced"
+#     }
 
-    auto_delete = true
-  }
+#     auto_delete = true
+#   }
 
-  network_interface {
-    network = "default"
+#   network_interface {
+#     network = "default"
 
-    access_config {
-      # This allocates a public IP
-    }
-  }
+#     access_config {
+#       # This allocates a public IP
+#     }
+#   }
 
-  metadata = {
-    enable-oslogin = "TRUE"  # Enables SSH via IAM or OS Login
-  }
+#   metadata = {
+#     enable-oslogin = "TRUE" # Enables SSH via IAM or OS Login
+#   }
 
-  tags = ["ssh-enabled"]
-}
+#   tags = ["ssh-enabled"]
+# }
 
 
-resource "google_compute_firewall" "allow_ssh" {
-  name    = "allow-ssh"
-  network = "default"
+# resource "google_compute_firewall" "allow_ssh" {
+#   name    = "allow-ssh"
+#   network = "default"
 
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
+#   allow {
+#     protocol = "tcp"
+#     ports    = ["22"]
+#   }
 
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["ssh-enabled"]
-}
+#   source_ranges = ["0.0.0.0/0"]
+#   target_tags   = ["ssh-enabled"]
+# }

@@ -1,0 +1,6 @@
+service_account*.json
+*.tfstate
+*.tfstate.backup
+.terraform
+.terraform.lock.hcl
+gcp-terraform-creds.json
