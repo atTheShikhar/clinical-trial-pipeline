@@ -1,5 +1,10 @@
 [sqlfluff]
 dialect = duckdb
-templater = jinja
-exclude_rules = L009
+templater = placeholder
+exclude_rules = LT01,CP02,CP04,CP03
 exclude_files = etl/bk/*
+max_line_length = 120
+
+[sqlfluff:templater:placeholder]
+param_regex = @(?P<param_name>[\w_]+)
+my_variable = 'dummy_values'
