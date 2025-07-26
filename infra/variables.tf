@@ -17,8 +17,3 @@ variable "zone" {
   default     = "us-central1-a"
 }
 
-variable "gcp_credentials_file" {
-  description = "Path to the GCP service account key JSON"
-  type        = string
-  sensitive   = true
-}
