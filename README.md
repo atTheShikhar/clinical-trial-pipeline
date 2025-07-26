@@ -1,5 +1,7 @@
 ## Overview
 
+[![CI/CD](https://github.com/atTheShikhar/clinical-trial-pipeline/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/atTheShikhar/clinical-trial-pipeline/actions/workflows/ci-cd.yaml)
+
 ![High level architecture](./architecture.png "High level architecture")
 
 This primary objective of this project is to extract large corpus of raw `.json` data from a datasource ([ClinicalTrials.gov](https://clinicaltrials.gov/data-api/about-api/api-migration#other-all-public-xml) in this case), apply data transformations using `SQLMesh` and `DuckLake`, and then load the processed data to `Google Cloud Bucket`. 
