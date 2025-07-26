@@ -63,10 +63,6 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Write GCP service account key to file
-        run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" > gcp-creds.json
-
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
 

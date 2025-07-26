@@ -1,7 +1,7 @@
 provider "google" {
-  project     = var.project_id
-  region      = var.region
-  zone        = var.zone
+  project = var.project_id
+  region  = var.region
+  zone    = var.zone
 }
 
 resource "google_storage_bucket" "raw_bucket" {
