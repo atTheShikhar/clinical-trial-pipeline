@@ -1,3 +1,4 @@
+-- sqlfluff: disable=L014,L025
 MODEL (
   name studies.incremental,
   kind INCREMENTAL_BY_TIME_RANGE (
