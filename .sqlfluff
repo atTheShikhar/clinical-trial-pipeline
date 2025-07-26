@@ -1,0 +1,5 @@
+[sqlfluff]
+dialect = duckdb
+templater = jinja
+exclude_rules = L009
+exclude_files = etl/bk/*
