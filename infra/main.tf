@@ -66,6 +66,54 @@ resource "google_storage_bucket_iam_member" "ro_sa_ducklake" {
   member = "serviceAccount:${google_service_account.bucket_ro_sa.email}"
 }
 
+
+# Provisions Google Cloud Run service with placeholder image
+resource "google_cloud_run_v2_service" "query_api" {
+  name     = "query-api"
+  location = var.region
+
+  template {
+    containers {
+      image = "gcr.io/cloudrun/hello" # Placeholder image
+      ports {
+        container_port = 8000
+      }
+      resources {
+        limits = {
+          cpu    = "2"
+          memory = "1Gi"
+        }
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 4
+    }
+
+    max_instance_request_concurrency = 5
+    timeout                          = "60s"
+  }
+
+  ingress = "INGRESS_TRAFFIC_ALL"
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+}
+
+# Allow public access to the query-api cloud run service
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloud_run_v2_service.query_api.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
+
+
 # resource "google_compute_instance" "vm_instance" {
 #   name         = "shikhar-vm"
 #   machine_type = "e2-standard-2" # 2 vCPU, 4 GB RAM
