@@ -16,9 +16,10 @@ variables = {
 }
 
 
-#NOTE: Extended the library specific class to add support for previously unsupported uptions
+#NOTE: Extended the library specific class to add support for previously unsupported options
+# metadata_schema is used in case the duckdb metadata table is already created by another ducklake instance
 class CustomDuckDBAttachOptions(DuckDBAttachOptions):
-    metadata_schema: str | None # NOTE: MySQL specific custom option
+    metadata_schema: str | None = None # NOTE: MySQL specific custom option
 
     def to_sql(self, alias: str) -> str:
         options = []
@@ -83,8 +84,7 @@ config = Config(
                         type="ducklake",
                         path="mysql:",
                         data_path=os.environ["DUCKLAKE_GCS_BUCKET"],
-                        metadata_schema=os.environ["MYSQL_DATABASE"]
-                    )
+                    ),
                 }
             ),
             state_connection=DuckDBConnectionConfig(

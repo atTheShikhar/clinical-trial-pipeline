@@ -76,4 +76,5 @@ curl -X 'POST' \
 }'
 ```
 > Replace <BASE_URL> and <SERVER_API_TOKEN> accordingly
+7. Some of the sample queries are listed [here](sample_queries.sql).
 
