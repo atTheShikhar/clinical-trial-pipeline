@@ -1,0 +1,5 @@
+service_account*
+.venv
+.cache
+__pycache__
+logs*
