@@ -81,6 +81,10 @@ resource "google_cloud_run_v2_service" "query_api" {
         value = var.environment
       }
       env {
+        name  = "MYSQL_HOST"
+        value = var.mysql_host
+      }
+      env {
         name  = "MYSQL_DB"
         value = var.mysql_db
       }
