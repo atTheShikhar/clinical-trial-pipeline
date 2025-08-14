@@ -41,9 +41,6 @@ jobs:
   terraform:
     name: Terraform Fmt, Validate, Plan
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./infra
 
     env:
       TF_VAR_mysql_user: "${{ secrets.MYSQL_USER }}"
@@ -55,6 +52,10 @@ jobs:
       TF_VAR_storage_secret: "${{ secrets.STORAGE_SECRET }}"
       TF_VAR_server_api_key: "${{ secrets.SERVER_API_KEY }}"
       TF_VAR_environment: "${{ secrets.ENVIRONMENT }}"
+      LOCATION: "us-central1"
+      PROJECT_ID: "stalwart-micron-464617-i1"
+      REPO_NAME: "query-api"
+      IMAGE_NAME: "clinical-trial-api"
 
     steps:
       - name: Checkout code
@@ -74,22 +75,32 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Build and Push Docker Image
+        run: |
+          gcloud auth configure-docker ${LOCATION}-docker.pkg.dev
+          docker build -t ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest ./api
+          docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest
+
       - name: Get Latest Image Digest
         id: get_image_hash
         run: |
           IMAGE_DIGEST=$(gcloud artifacts docker images describe \
-            us-central1-docker.pkg.dev/stalwart-micron-464617-i1/query-api/clinical-trial-api:latest \
+            ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest \
             --format="get(image_summary.digest)")
           echo "TF_VAR_gcr_image_hash=${IMAGE_DIGEST}" >> $GITHUB_ENV
 
       - name: Terraform Format Check
+        working-directory: ./infra
         run: terraform fmt -check -recursive
 
       - name: Terraform Init
+        working-directory: ./infra
         run: terraform init
 
       - name: Terraform Validate
+        working-directory: ./infra
         run: terraform validate
 
       - name: Terraform Plan
+        working-directory: ./infra
         run: terraform plan
