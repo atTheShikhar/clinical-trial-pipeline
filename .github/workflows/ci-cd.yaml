@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -41,9 +41,21 @@ jobs:
   terraform:
     name: Terraform Fmt, Validate, Plan
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./infra
+
+    env:
+      TF_VAR_mysql_user: "${{ secrets.MYSQL_USER }}"
+      TF_VAR_mysql_pass: "${{ secrets.MYSQL_PASS }}"
+      TF_VAR_mysql_host: "${{ secrets.MYSQL_HOST }}"
+      TF_VAR_mysql_db: "${{ secrets.MYSQL_DB }}"
+      TF_VAR_storage_bucket: "${{ secrets.STORAGE_BUCKET }}"
+      TF_VAR_storage_access_id: "${{ secrets.STORAGE_ACCESS_ID }}"
+      TF_VAR_storage_secret: "${{ secrets.STORAGE_SECRET }}"
+      TF_VAR_server_api_key: "${{ secrets.SERVER_API_KEY }}"
+      TF_VAR_environment: "${{ secrets.ENVIRONMENT }}"
+      LOCATION: "us-central1"
+      PROJECT_ID: "stalwart-micron-464617-i1"
+      REPO_NAME: "query-api"
+      IMAGE_NAME: "clinical-trial-api"
 
     steps:
       - name: Checkout code
@@ -58,19 +70,42 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Build and Push Docker Image
+        run: |
+          gcloud auth configure-docker ${LOCATION}-docker.pkg.dev
+          docker build -t ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest ./api
+          docker push ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest
+
+      - name: Get Latest Image Digest
+        id: get_image_hash
+        run: |
+          IMAGE_DIGEST=$(gcloud artifacts docker images describe \
+            ${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest \
+            --format="get(image_summary.digest)")
+          echo "TF_VAR_gcr_image_hash=${IMAGE_DIGEST}" >> $GITHUB_ENV
+
       - name: Terraform Format Check
+        working-directory: ./infra
         run: terraform fmt -check -recursive
 
       - name: Terraform Init
+        working-directory: ./infra
         run: terraform init
 
       - name: Terraform Validate
+        working-directory: ./infra
         run: terraform validate
 
       - name: Terraform Plan
+        working-directory: ./infra
         run: terraform plan
+
+      - name: Terraform Apply (On Merge)
+        working-directory: ./infra
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve

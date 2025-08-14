@@ -1,6 +1,7 @@
 service_account*.json
-*.tfstate
-*.tfstate.backup
+*.tfstate.*
 .terraform
 .terraform.lock.hcl
 gcp-terraform-creds.json
+*.txt
+secrets.auto.tfvars

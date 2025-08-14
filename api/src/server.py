@@ -54,6 +54,6 @@ app.include_router(queryRouter)
 
 @app.get("/ping")
 async def health_check():
-    return {"msg": "ok"}
+    return {"msg": "testing"}
 
 
