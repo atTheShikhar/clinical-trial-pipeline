@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -45,6 +45,18 @@ jobs:
       run:
         working-directory: ./infra
 
+    env:
+      TF_VAR_mysql_user: "${{ secrets.MYSQL_USER }}"
+      TF_VAR_mysql_pass: "${{ secrets.MYSQL_PASS }}"
+      TF_VAR_mysql_host: "${{ secrets.MYSQL_HOST }}"
+      TF_VAR_mysql_db: "${{ secrets.MYSQL_DB }}"
+      TF_VAR_storage_bucket: "${{ secrets.STORAGE_BUCKET }}"
+      TF_VAR_storage_access_id: "${{ secrets.STORAGE_ACCESS_ID }}"
+      TF_VAR_storage_secret: "${{ secrets.STORAGE_SECRET }}"
+      TF_VAR_server_api_key: "${{ secrets.SERVER_API_KEY }}"
+      TF_VAR_environment: "${{ secrets.ENVIRONMENT }}"
+      TF_VAR_gcr_image_hash: "${{ secrets.GCR_IMAGE_HASH }}"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,7 +70,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
