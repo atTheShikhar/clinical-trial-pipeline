@@ -71,31 +71,81 @@ resource "google_storage_bucket_iam_member" "ro_sa_ducklake" {
 resource "google_cloud_run_v2_service" "query_api" {
   name     = "query-api"
   location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
+    execution_environment            = "EXECUTION_ENVIRONMENT_GEN1"
+    max_instance_request_concurrency = 5
+    timeout                          = "60s"
+
     containers {
-      image = "gcr.io/cloudrun/hello" # Placeholder image
+      name  = "clinical-trial-api-1"
+      image = "us-central1-docker.pkg.dev/stalwart-micron-464617-i1/query-api/clinical-trial-api:latest"
+
+      env {
+        name  = "ENVIRONMENT"
+        value = var.environment
+      }
+      env {
+        name  = "MYSQL_DB"
+        value = var.mysql_db
+      }
+      env {
+        name  = "MYSQL_PASS"
+        value = var.mysql_pass
+      }
+      env {
+        name  = "MYSQL_USER"
+        value = var.mysql_user
+      }
+      env {
+        name  = "SERVER_API_KEY"
+        value = var.server_api_key
+      }
+      env {
+        name  = "STORAGE_ACCESS_ID"
+        value = var.storage_access_id
+      }
+      env {
+        name  = "STORAGE_BUCKET"
+        value = var.storage_bucket
+      }
+      env {
+        name  = "STORAGE_SECRET"
+        value = var.storage_secret
+      }
+
       ports {
         container_port = 8000
+        name           = "http1"
       }
       resources {
+        cpu_idle = true
         limits = {
-          cpu    = "2"
+          cpu    = "2000m"
           memory = "1Gi"
+        }
+        startup_cpu_boost = true
+      }
+
+      startup_probe {
+        failure_threshold     = 1
+        initial_delay_seconds = 0
+        period_seconds        = 240
+        timeout_seconds       = 240
+
+        tcp_socket {
+          port = 8000
         }
       }
     }
 
     scaling {
       min_instance_count = 0
-      max_instance_count = 4
+      max_instance_count = 5
     }
-
-    max_instance_request_concurrency = 5
-    timeout                          = "60s"
   }
 
-  ingress = "INGRESS_TRAFFIC_ALL"
 
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
