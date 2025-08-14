@@ -104,3 +104,8 @@ jobs:
       - name: Terraform Plan
         working-directory: ./infra
         run: terraform plan
+
+      - name: Terraform Apply (On Merge)
+        working-directory: ./infra
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
