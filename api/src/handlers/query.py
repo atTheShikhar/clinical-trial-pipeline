@@ -42,7 +42,5 @@ def run_query(conn: duckdb.DuckDBPyConnection ,qry: str):
 
     df = conn.sql(qry).df()
     result = df.to_dict('records')
-    print(result)
     json_result = json.dumps(result, cls=CustomJSONEncoder, indent=4)
-    print(json_result)
     return json.loads(json_result)
