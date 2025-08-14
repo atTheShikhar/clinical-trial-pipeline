@@ -80,7 +80,7 @@ resource "google_cloud_run_v2_service" "query_api" {
 
     containers {
       name  = "clinical-trial-api-1"
-      image = "us-central1-docker.pkg.dev/stalwart-micron-464617-i1/query-api/clinical-trial-api:latest"
+      image = "us-central1-docker.pkg.dev/stalwart-micron-464617-i1/query-api/clinical-trial-api@${var.gcr_image_hash}"
 
       env {
         name  = "ENVIRONMENT"

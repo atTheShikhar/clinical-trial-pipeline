@@ -70,3 +70,9 @@ variable "environment" {
   }
 }
 
+
+variable "gcr_image_hash" {
+  description = "Unique image hash for google cloud run service"
+  type        = string
+}
+
