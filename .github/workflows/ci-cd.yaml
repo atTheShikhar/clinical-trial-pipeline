@@ -55,7 +55,6 @@ jobs:
       TF_VAR_storage_secret: "${{ secrets.STORAGE_SECRET }}"
       TF_VAR_server_api_key: "${{ secrets.SERVER_API_KEY }}"
       TF_VAR_environment: "${{ secrets.ENVIRONMENT }}"
-      TF_VAR_gcr_image_hash: "${{ secrets.GCR_IMAGE_HASH }}"
 
     steps:
       - name: Checkout code
@@ -74,6 +73,14 @@ jobs:
 
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get Latest Image Digest
+        id: get_image_hash
+        run: |
+          IMAGE_DIGEST=$(gcloud artifacts docker images describe \
+            us-central1-docker.pkg.dev/stalwart-micron-464617-i1/query-api/clinical-trial-api:latest \
+            --format="get(image_summary.digest)")
+          echo "TF_VAR_gcr_image_hash=${IMAGE_DIGEST}" >> $GITHUB_ENV
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
